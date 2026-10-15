@@ -177,7 +177,10 @@ Item {
 
         anchors.centerIn: parent
 
+        // Grow out from the bar side
+        transformOrigin: Item.Left
         opacity: 0
+        scale: 0.9
         active: false
 
         states: State {
@@ -187,6 +190,7 @@ Item {
             PropertyChanges {
                 popout.active: true
                 popout.opacity: 1
+                popout.scale: 1
             }
         }
 
@@ -196,9 +200,15 @@ Item {
                 to: ""
 
                 SequentialAnimation {
-                    Anim {
-                        property: "opacity"
-                        type: Anim.DefaultEffects
+                    ParallelAnimation {
+                        Anim {
+                            property: "opacity"
+                            type: Anim.DefaultEffects
+                        }
+                        Anim {
+                            property: "scale"
+                            type: Anim.FastSpatial
+                        }
                     }
                     PropertyAction {
                         property: "active"
@@ -213,9 +223,14 @@ Item {
                     PropertyAction {
                         property: "active"
                     }
-                    Anim {
-                        property: "opacity"
-                        type: Anim.SlowEffects
+                    ParallelAnimation {
+                        Anim {
+                            property: "opacity"
+                            type: Anim.SlowEffects
+                        }
+                        Anim {
+                            property: "scale"
+                        }
                     }
                 }
             }
