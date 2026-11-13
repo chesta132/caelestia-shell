@@ -24,6 +24,34 @@ Item {
     readonly property bool shouldBeVisible: !fullscreen && !disabled && (Config.bar.persistent || screenState.bar || isHovered)
     property bool isHovered
 
+    // Show the bar like hovering the screen edge would, but triggered manually (IPC: `caelestia shell bar peek`).
+    // duration <= 0: stay until hidden/toggled or the mouse enters and leaves the bar (same as hover).
+    // duration > 0 (ms): also hide automatically after that long.
+    function peek(duration: int): void {
+        isHovered = true;
+        if (duration > 0) {
+            peekTimer.interval = duration;
+            peekTimer.restart();
+        } else {
+            peekTimer.stop();
+        }
+    }
+
+    // Toggle the hover-style show with no timeout: stays until toggled again (or the mouse enters and leaves the bar)
+    function togglePeek(): void {
+        if (isHovered) {
+            unpeek();
+        } else {
+            peekTimer.stop();
+            isHovered = true;
+        }
+    }
+
+    function unpeek(): void {
+        peekTimer.stop();
+        isHovered = false;
+    }
+
     function closeTray(): void {
         (content.item as Bar)?.closeTray();
     }
@@ -70,6 +98,12 @@ Item {
             }
         }
     ]
+
+    Timer {
+        id: peekTimer
+
+        onTriggered: root.isHovered = false
+    }
 
     Loader {
         id: content

@@ -129,6 +129,30 @@ Scope {
         }
     }
 
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
+        name: "bar"
+        description: "Toggle taskbar (hover-style, no timeout)"
+        onPressed: ShellState.componentsForActive()?.bar?.togglePeek()
+    }
+
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
+        name: "barShow"
+        description: "Show taskbar temporarily (hover-style)"
+        onPressed: ShellState.componentsForActive()?.bar?.peek(0)
+    }
+
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
+        name: "barHide"
+        description: "Hide taskbar (hover-style)"
+        onPressed: ShellState.componentsForActive()?.bar?.unpeek()
+    }
+
     IpcHandler {
         function toggle(drawer: string): void {
             if (list().split("\n").includes(drawer)) {
@@ -162,6 +186,28 @@ Scope {
         }
 
         target: "nexus"
+    }
+
+    // Manually show/hide the taskbar (bar) like the show-on-hover behaviour, on the focused monitor
+    IpcHandler {
+        // Not named "show": Quickshell's CLI parses `ipc call bar show` as the `ipc show` subcommand
+        function peek(): void {
+            ShellState.componentsForActive()?.bar?.peek(0);
+        }
+
+        function showFor(seconds: int): void {
+            ShellState.componentsForActive()?.bar?.peek(seconds * 1000);
+        }
+
+        function toggle(): void {
+            ShellState.componentsForActive()?.bar?.togglePeek();
+        }
+
+        function hide(): void {
+            ShellState.componentsForActive()?.bar?.unpeek();
+        }
+
+        target: "bar"
     }
 
     IpcHandler {
