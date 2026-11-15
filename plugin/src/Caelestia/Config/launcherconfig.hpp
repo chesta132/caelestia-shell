@@ -44,10 +44,11 @@ class LauncherClipboard : public settings::ObjectNode {
         QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + u"/caelestia/clipboard-pins.db"_s)
 };
 
-class LauncherEmoji : public settings::ObjectNode {
-    CONFIG_NODE(LauncherEmoji, settings::ObjectNode)
+// Shared by all the launcher pickers (emoji, kaomoji)
+class LauncherPicker : public settings::ObjectNode {
+    CONFIG_NODE(LauncherPicker, settings::ObjectNode)
 
-    // Hide emojis that the installed fonts can't render (usually ones newer than the font)
+    // Hide emojis that the installed fonts can't render (usually ones newer than the font). Only applies to the emoji picker
     CONFIG_PROPERTY(bool, hideUnsupported, true)
     // If not empty, use this instead of pasteShortcut
     CONFIG_PROPERTY(QStringList, pasteCommand, {})
@@ -83,7 +84,7 @@ class LauncherConfig : public settings::ObjectNode {
     CONFIG_GLOBAL_PROPERTY(QStringList, hiddenApps, {})
     CONFIG_GLOBAL_SUBOBJECT(LauncherUseFuzzy, useFuzzy)
     CONFIG_GLOBAL_SUBOBJECT(LauncherClipboard, clipboard)
-    CONFIG_GLOBAL_SUBOBJECT(LauncherEmoji, emoji)
+    CONFIG_GLOBAL_SUBOBJECT(LauncherPicker, picker)
     CONFIG_GLOBAL_LIST(LauncherActionList, actions,
         DEFAULT_ARG({
             vmap({
