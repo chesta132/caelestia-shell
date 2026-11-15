@@ -44,7 +44,7 @@ class LauncherClipboard : public settings::ObjectNode {
         QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + u"/caelestia/clipboard-pins.db"_s)
 };
 
-// Shared by all the launcher pickers (emoji, kaomoji)
+// Shared by all the launcher pickers (emoji, kaomoji, symbol)
 class LauncherPicker : public settings::ObjectNode {
     CONFIG_NODE(LauncherPicker, settings::ObjectNode)
 
@@ -122,6 +122,12 @@ class LauncherConfig : public settings::ObjectNode {
                 { u"icon"_s, u"sentiment_satisfied"_s },
                 { u"description"_s, mark(u"Pick a kaomoji to copy or paste"_s) },
                 { u"command"_s, QStringList{ u"autocomplete"_s, u"kaomoji"_s } },
+            }),
+            vmap({
+                { u"name"_s, markCtx(u"Symbol"_s, u"launcher action"_s) },
+                { u"icon"_s, u"emoji_symbols"_s },
+                { u"description"_s, mark(u"Pick a symbol to copy or paste"_s) },
+                { u"command"_s, QStringList{ u"autocomplete"_s, u"symbol"_s } },
             }),
             vmap({
                 { u"name"_s, markCtx(u"Variant"_s, u"launcher action"_s) },
