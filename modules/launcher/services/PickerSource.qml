@@ -4,6 +4,7 @@ import Quickshell.Io
 import Caelestia.Config
 import Caelestia.I18n
 import qs.services
+import "../../../utils/scripts/fuzzysort.js" as Fuzzy
 
 // Data and logic behind a launcher picker (i.e. emojis, kaomoji, symbols). The data is read from assets/<name>/<name>.json
 // and the keywords for other languages from assets/<name>/i18n/<locale>.json
@@ -24,11 +25,15 @@ Scope {
     readonly property real checkFromVersion: 12
     readonly property int maxRecent: 24
     readonly property bool hideUnsupported: GlobalConfig.launcher.picker?.hideUnsupported ?? true
+    readonly property real fuzzyThreshold: 0.3 // Min fuzzysort score (0-1) for a word to count as a match
 
     property bool loaded
     property var unfiltered: [] // Everything in the data file
     property var base: [] // The data file, without the items that can't be rendered if hideUnsupported is on
     property var localised: ({}) // From the translations file for the current language (key -> keywords)
+    // Every keyword of every item, prepared for fuzzysort, built on the first fuzzy search. It's filled in place rather
+    // than reassigned, as that happens while evaluating the search bindings, which would make them loop
+    property var fuzzyCache: ({})
 
     // Keywords are never displayed, only searched. They're padded with spaces for cheap word matching
     readonly property var items: base.map(e => ({
@@ -196,6 +201,9 @@ Scope {
         if (tokens.length === 0)
             return [];
 
+        if (GlobalConfig.launcher.useFuzzy.pickers)
+            return fuzzySearch(tokens);
+
         const scored = [];
         for (let i = 0; i < items.length; i++) {
             const s = items[i].s;
@@ -264,6 +272,8 @@ Scope {
         if (loaded)
             base = filterRenderable(unfiltered);
     }
+
+    onItemsChanged: fuzzyCache = ({})
 
     onLocaleCandidatesChanged: {
         localeAttempt = 0;

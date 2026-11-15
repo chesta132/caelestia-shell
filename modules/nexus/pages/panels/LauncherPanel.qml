@@ -166,10 +166,17 @@ PageBase {
         }
 
         ToggleRow {
-            last: true
             text: Tr.tr("Clipboard")
             checked: GlobalConfig.launcher.useFuzzy.clipboard
             onToggled: GlobalConfig.launcher.useFuzzy.clipboard = checked
+        }
+
+        ToggleRow {
+            last: true
+            text: Tr.tr("Pickers")
+            subtext: Tr.tr("Emoji, kaomoji and symbols")
+            checked: GlobalConfig.launcher.useFuzzy.pickers
+            onToggled: GlobalConfig.launcher.useFuzzy.pickers = checked
         }
     }
 }
