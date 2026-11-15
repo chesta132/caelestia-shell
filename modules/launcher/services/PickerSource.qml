@@ -23,9 +23,11 @@ Scope {
     // from this version onwards are checked against the fonts, as older ones are universally supported
     readonly property real checkFromVersion: 12
     readonly property int maxRecent: 24
+    readonly property bool hideUnsupported: GlobalConfig.launcher.picker?.hideUnsupported ?? true
 
     property bool loaded
-    property var base: [] // From the data file
+    property var unfiltered: [] // Everything in the data file
+    property var base: [] // The data file, without the items that can't be rendered if hideUnsupported is on
     property var localised: ({}) // From the translations file for the current language (key -> keywords)
 
     // Keywords are never displayed, only searched. They're padded with spaces for cheap word matching
@@ -66,7 +68,7 @@ Scope {
     // An emoji is renderable if it shows up as a single glyph as wide as a known one. Missing glyphs fall back
     // to a different (narrow) .notdef glyph, and unsupported ZWJ sequences get split into multiple glyphs
     function filterRenderable(all: var): var {
-        if (!checkRenderable || !(GlobalConfig.launcher.picker?.hideUnsupported ?? true))
+        if (!checkRenderable || !hideUnsupported)
             return all;
 
         probe.text = "😀";
@@ -145,6 +147,12 @@ Scope {
         Hypr.dispatch(Hypr.usingLua ? `hl.dsp.send_shortcut({ mods = "${mods.join("+")}", key = "${key}" })` : `sendshortcut ${mods.join(" ")}, ${key}, activewindow`);
     }
 
+    // The filtering is too slow for a binding (and changes the probe's text), so it's redone when the option changes
+    onHideUnsupportedChanged: {
+        if (loaded)
+            base = filterRenderable(unfiltered);
+    }
+
     onLocaleCandidatesChanged: {
         localeAttempt = 0;
         localised = ({});
@@ -170,6 +178,7 @@ Scope {
         onLoaded: {
             try {
                 const items = JSON.parse(text()).items ?? [];
+                root.unfiltered = items;
                 root.base = root.filterRenderable(items);
                 root.loaded = true;
                 console.log(`PickerSource(${root.name}): loaded ${root.base.length}/${items.length} items`);
