@@ -220,7 +220,7 @@ ColumnLayout {
         }
     }
 
-    component BatteryCard: StyledClippingRect {
+    component BatteryCard: ClipRect {
         id: card
 
         // Starts empty so the fill sweeps in when the popout opens
@@ -243,7 +243,7 @@ ColumnLayout {
             subTextColour: Colours.palette.m3onSurfaceVariant
         }
 
-        StyledClippingRect {
+        ClipRect {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.left: parent.left

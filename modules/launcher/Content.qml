@@ -40,15 +40,6 @@ Item {
             list.currentList?.incrementCurrentIndex();
     }
 
-    function applyPrefill(): void {
-        if (!screenState.launcherPrefill)
-            return;
-
-        search.text = screenState.launcherPrefill;
-        search.cursorPosition = search.text.length;
-        screenState.launcherPrefill = "";
-    }
-
     // Returns whether the key was handled
     function handleClipboardKey(event: var): bool {
         const entry = list.currentList?.currentItem?.modelData;
@@ -202,8 +193,6 @@ Item {
                 event.accepted = true;
             }
         }
-
-        onTextChanged: root.screenState.launcherText = text
 
         Component.onCompleted: {
             forceActiveFocus();
