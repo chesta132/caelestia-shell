@@ -27,7 +27,7 @@ Item {
     readonly property string infoText: {
         if (!shown)
             return "";
-        if (shown.image || !textLoaded)
+        if (shown.image || shown.file || !textLoaded)
             return shown.info;
 
         const max = GlobalConfig.launcher.clipboard.previewMaxChars;
@@ -115,8 +115,8 @@ Item {
                     anchors.left: parent.left
 
                     primary: true
-                    icon: root.shown?.image ? "image" : "notes"
-                    label: root.shown?.image ? Tr.tr("Image") : Tr.tr("Text")
+                    icon: root.shown?.image ? "image" : root.shown?.file ? "attach_file" : "notes"
+                    label: root.shown?.image ? Tr.tr("Image") : root.shown?.file ? Tr.tr("Files") : Tr.tr("Text")
                 }
 
                 Badge {
@@ -162,7 +162,7 @@ Item {
                     anchors.margins: Tokens.padding.medium
 
                     visible: !!root.shown && !root.shown.image
-                    text: root.textLoaded ? root.fullText : (root.shown?.preview ?? "")
+                    text: root.textLoaded ? (root.shown?.file ? Clipboard.filePaths(root.fullText) : root.fullText) : (root.shown?.label ?? "")
                     font: Tokens.font.body.small
                     wrapMode: Text.Wrap
                     elide: Text.ElideRight

@@ -54,7 +54,7 @@ Item {
                 anchors.centerIn: parent
 
                 visible: !(root.modelData?.image ?? false)
-                text: "content_paste"
+                text: root.modelData?.file ? "description" : "content_paste"
                 color: Colours.palette.m3onSurfaceVariant
                 fontStyle: Tokens.font.icon.builders.large.scale(1.3).build()
             }
@@ -120,7 +120,7 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
 
-                text: root.modelData?.preview ?? ""
+                text: root.modelData?.label ?? root.modelData?.preview ?? ""
                 color: root.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
                 font: Tokens.font.body.medium
                 elide: Text.ElideRight
