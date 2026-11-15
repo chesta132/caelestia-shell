@@ -18,16 +18,20 @@ StyledRect {
     required property NotifData modelData
     readonly property bool hasImage: modelData.image.length > 0
     readonly property bool hasAppIcon: modelData.appIcon.length > 0
+    // Firefox doesn't, so drop it for parity. Only for browsers: other senders keep their links.
+    readonly property bool isBrowser: /chrom|brave|vivaldi|opera|microsoft-edge/i.test((modelData.hints?.["desktop-entry"] ?? "") + " " + modelData.appName)
+    readonly property string cleanBody: isBrowser ? modelData.body.replace(/^\s*<a\s[^>]*>[^<]*<\/a>\s*/i, "") : modelData.body
     // Notification bodies allow a small HTML subset (<a>, <b>, <i>, <u>), not Markdown
-    readonly property bool hasMarkup: /<\/?(a|b|i|u)[ >]/i.test(modelData.body)
-    readonly property int bodyTextFormat: hasMarkup ? Text.RichText : /[<*_`#\[\]]/.test(modelData.body) ? Text.MarkdownText : Text.PlainText
+    readonly property bool hasMarkup: /<\/?(a|b|i|u)[ >]/i.test(cleanBody)
+    readonly property int bodyTextFormat: hasMarkup ? Text.RichText : /[<*_`#\[\]]/.test(cleanBody) ? Text.MarkdownText : Text.PlainText
     // Escapes everything, then re-opens only the tags above, so a body can't sneak in
     // bigger markup (e.g. <h1>, <table>) that Qt's rich text would happily also render
     readonly property string richBody: {
         if (!hasMarkup)
-            return modelData.body;
-        let s = modelData.body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        s = s.replace(/&lt;a href="([^"]*)"&gt;/gi, "<a href=\"$1\">");
+            return cleanBody;
+        let s = cleanBody.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        s = s.replace(/&lt;a href=(["'])([^"']*)\1&gt;/gi, "<a href=\"$2\">");
+        s = s.replace(/&lt;\/a&gt;/gi, "</a>");
         return s.replace(/&lt;(\/?)(b|i|u)&gt;/gi, "<$1$2>");
     }
     // Eliding rich text mid-tag breaks the markup, so the one-line preview strips it
