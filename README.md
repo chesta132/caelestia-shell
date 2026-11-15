@@ -723,7 +723,8 @@ For example, to automatically hide the bar on the monitor named `DP-1`:
             "schemes": false,
             "variants": false,
             "wallpapers": false,
-            "clipboard": false
+            "clipboard": false,
+            "pickers": false
         },
         "actions": [
             {
