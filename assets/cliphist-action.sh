@@ -25,6 +25,25 @@ ch() {
     fi
 }
 
+# Whether a file is a list of file:// URIs, which is how file managers put copied files
+# on the clipboard (text/uri-list)
+is_files() {
+    head -c 7 "$1" | grep -aq '^file://' || return 1
+    head -c 65536 "$1" | tr -d '\r' | awk '
+        NF && !/^#/ { n++; if ($0 !~ /^file:\/\//) bad = 1 }
+        END { exit !(n > 0 && !bad) }'
+}
+
+# Writes the text of the clipboard to a file, which is a URI list if files were copied
+clip_text() {
+    if timeout 1 wl-paste --list-types 2>/dev/null | grep -qx 'text/uri-list' &&
+        timeout 1 wl-paste --no-newline --type text/uri-list >"$1" 2>/dev/null &&
+        is_files "$1"; then
+        return 0
+    fi
+    timeout 1 wl-paste --no-newline --type text >"$1" 2>/dev/null
+}
+
 case "$cmd" in
 list)
     # Older cliphist versions don't have -preview-width
@@ -49,8 +68,15 @@ image)
     fi
     ;;
 copy)
-    # copy <db> <id>
-    ch decode "$1" | wl-copy
+    # copy <db> <id>: files are offered as text/uri-list so they paste as files
+    tmp=$(mktemp)
+    trap 'rm -f "$tmp"' EXIT
+    ch decode "$1" >"$tmp"
+    if is_files "$tmp"; then
+        wl-copy --type text/uri-list <"$tmp"
+    else
+        wl-copy <"$tmp"
+    fi
     ;;
 delete)
     # delete <db> <id>
@@ -71,15 +97,18 @@ current)
     if printf '%s\n' "$types" | grep -q '^image/'; then
         echo image
     elif printf '%s\n' "$types" | grep -qiE '^(text/|utf8_string$|string$|text$)'; then
+        tmp=$(mktemp)
+        trap 'rm -f "$tmp"' EXIT
+        clip_text "$tmp" || true
         echo text
-        timeout 1 wl-paste --no-newline --type text 2>/dev/null | head -c "$1"
+        head -c "$1" "$tmp"
     fi
     ;;
 active)
     # active <db> <id>...: print the ids whose content is exactly what the clipboard holds
     tmp=$(mktemp)
     trap 'rm -f "$tmp"' EXIT
-    timeout 1 wl-paste --no-newline --type text >"$tmp" 2>/dev/null || exit 0
+    clip_text "$tmp" || exit 0
     for id in "$@"; do
         if ch decode "$id" 2>/dev/null | cmp -s - "$tmp"; then
             echo "$id"

@@ -43,6 +43,47 @@ Searcher {
             }));
     }
 
+    // Copied files are stored as a URI list, which cliphist previews as the URIs on one line.
+    // Returns null if the preview isn't one, otherwise the file names and how many there are.
+    function parseFiles(preview: string): var {
+        if (!preview.startsWith("file://"))
+            return null;
+
+        // cliphist ends truncated previews with an ellipsis, and URIs have no spaces in them
+        const truncated = preview.endsWith("…");
+        const uris = (truncated ? preview.slice(0, -1) : preview).split(" ").filter(u => u);
+        if (!uris.every(u => u.startsWith("file://")))
+            return null;
+
+        // The last URI of a truncated preview may be cut off, so it doesn't get a name
+        const named = truncated && uris.length > 1 ? uris.slice(0, -1) : uris;
+        const names = named.map(uri => {
+            const name = uri.replace(/\/+$/, "").split("/").pop();
+            try {
+                return decodeURIComponent(name);
+            } catch (e) {
+                return name;
+            }
+        });
+        return {
+            names,
+            count: uris.length,
+            truncated
+        };
+    }
+
+    // Paths of the files in a URI list, one per line
+    function filePaths(text: string): string {
+        return text.split(/\r?\n/).filter(l => l.startsWith("file://")).map(l => {
+            const path = l.slice("file://".length);
+            try {
+                return decodeURIComponent(path);
+            } catch (e) {
+                return path;
+            }
+        }).join("\n");
+    }
+
     function parse(output: string, pinned: bool): var {
         const out = [];
         for (const line of output.split("\n")) {
@@ -53,14 +94,27 @@ Searcher {
             const clipId = line.slice(0, tab);
             const preview = line.slice(tab + 1);
             const image = preview.match(/^\[\[ binary data (\S+ \S+) (\S+) (\d+x\d+) \]\]$/);
+            const files = image ? null : parseFiles(preview);
 
             if (image) {
                 out.push({
                     clipId,
                     pinned,
                     preview,
+                    label: preview,
                     image: true,
+                    file: false,
                     info: `${image[1]} ${image[2]} ${image[3]}`
+                });
+            } else if (files) {
+                out.push({
+                    clipId,
+                    pinned,
+                    preview,
+                    label: files.names.join(", "),
+                    image: false,
+                    file: true,
+                    info: files.truncated ? Tr.tr("%1+ files").arg(files.count) : Tr.trN("%n file", "%n files", files.count)
                 });
             } else {
                 // cliphist ends truncated previews with an ellipsis
@@ -70,7 +124,9 @@ Searcher {
                     clipId,
                     pinned,
                     preview,
+                    label: preview,
                     image: false,
+                    file: false,
                     info: truncated ? Tr.tr("%1+ chars").arg(count) : Tr.trN("%n char", "%n chars", count)
                 });
             }
@@ -92,7 +148,9 @@ Searcher {
             clipId: entry.clipId,
             pinned: entry.pinned,
             preview: entry.preview,
+            label: entry.label,
             image: entry.image,
+            file: entry.file,
             info: entry.info
         };
     }
@@ -391,7 +449,9 @@ Searcher {
         readonly property string clipId: modelData.clipId
         readonly property bool pinned: modelData.pinned
         readonly property string preview: modelData.preview
+        readonly property string label: modelData.label
         readonly property bool image: modelData.image
+        readonly property bool file: modelData.file
         readonly property string info: modelData.info
     }
 }
