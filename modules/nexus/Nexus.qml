@@ -7,6 +7,7 @@ import qs.components
 import qs.components.controls
 import qs.services
 import qs.modules.nexus
+import qs.modules.nexus.pages.display
 
 Item {
     id: root
@@ -109,5 +110,13 @@ Item {
         anchors.margins: Tokens.padding.extraLarge
 
         nState: nState
+    }
+
+    // Shown on every page so a display change can be kept or reverted from anywhere in Nexus
+    ConfirmBar {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: Tokens.padding.extraLarge
+        z: 100
     }
 }

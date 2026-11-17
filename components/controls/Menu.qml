@@ -62,6 +62,17 @@ MouseArea {
         b: root.attachTo
     }
 
+    // Open upwards instead when a downward menu would overflow the window and there is room above
+    readonly property bool flipUp: {
+        CUtils.dependency(watcher.transform); // mapToItem is not reactive so this forces updates
+        if (attachSideY !== Menu.Bottom || thisSideY !== Menu.Top)
+            return false;
+        const item = attachTo;
+        const below = item.mapToItem(parent, 0, item.height).y + Math.abs(marginY) + menu.height;
+        const above = item.mapToItem(parent, 0, 0).y - Math.abs(marginY) - menu.height;
+        return below > parent.height && above >= 0;
+    }
+
     Elevation {
         id: menu
 
@@ -76,6 +87,8 @@ MouseArea {
         y: {
             CUtils.dependency(watcher.transform); // mapToItem is not reactive so this forces updates
             const item = root.attachTo;
+            if (root.flipUp)
+                return item.mapToItem(root.parent, 0, 0).y - height - Math.abs(root.marginY);
             let off = root.attachSideY === Menu.Top ? 0 : item.height;
             if (root.thisSideY === Menu.Bottom)
                 off -= height;
@@ -90,7 +103,7 @@ MouseArea {
 
         transform: Scale {
             yScale: root.expanded ? 1 : 0.1
-            origin.y: root.thisSideY === Menu.Bottom ? menu.height : 0
+            origin.y: root.thisSideY === Menu.Bottom || root.flipUp ? menu.height : 0
 
             Behavior on yScale {
                 Anim {}
