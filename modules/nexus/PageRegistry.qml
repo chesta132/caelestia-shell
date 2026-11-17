@@ -44,6 +44,12 @@ QtObject {
 
         // System
         {
+            label: Tr.tr("Power"),
+            icon: "bolt",
+            description: Tr.tr("Power strategy and idle"),
+            category: "system"
+        },
+        {
             label: Tr.tr("Updates"),
             icon: "update",
             description: Tr.tr("System updates"),

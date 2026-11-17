@@ -23,41 +23,38 @@ class GeneralApps : public settings::ObjectNode {
     CONFIG_PROPERTY(QStringList, explorer, { u"thunar"_s })
 };
 
-class GeneralIdleTimeout : public settings::ObjectNode {
-    CONFIG_NODE(GeneralIdleTimeout, settings::ObjectNode)
+// Idle timeouts in seconds. A value <= 0 disables that action.
+// `timeout` applies on battery (or on desktops without a battery),
+// `timeoutCharging` applies while a laptop battery is charging / plugged in.
+class GeneralIdleLock : public settings::ObjectNode {
+    CONFIG_NODE(GeneralIdleLock, settings::ObjectNode)
 
-    CONFIG_PROPERTY(bool, enabled, true)
-    CONFIG_PROPERTY(int, timeout, 300)
-    CONFIG_PROPERTY(QVariant, idleAction, {}, .allowedTypes = settings::unionTypes<QString, QStringList>())
-    CONFIG_PROPERTY(QVariant, returnAction, {}, .allowedTypes = settings::unionTypes<QString, QStringList>())
-    CONFIG_PROPERTY(bool, inhibitWhenAudio, false)
-    CONFIG_PROPERTY(bool, inhibitWhenCharging, false)
-    CONFIG_PROPERTY(bool, respectInhibitors, true)
+    CONFIG_PROPERTY(int, timeout, 180)
+    CONFIG_PROPERTY(int, timeoutCharging, 180)
 };
-CONFIG_LIST_TYPE(GeneralIdleTimeout, GeneralIdleTimeoutList)
+
+class GeneralIdleDisplay : public settings::ObjectNode {
+    CONFIG_NODE(GeneralIdleDisplay, settings::ObjectNode)
+
+    CONFIG_PROPERTY(int, timeout, 300)
+    CONFIG_PROPERTY(int, timeoutCharging, 0)
+};
+
+class GeneralIdleSleep : public settings::ObjectNode {
+    CONFIG_NODE(GeneralIdleSleep, settings::ObjectNode)
+
+    CONFIG_PROPERTY(int, timeout, 600)
+    CONFIG_PROPERTY(int, timeoutCharging, 0)
+};
 
 class GeneralIdle : public settings::ObjectNode {
     CONFIG_NODE(GeneralIdle, settings::ObjectNode)
 
     CONFIG_PROPERTY(bool, lockBeforeSleep, true)
     CONFIG_PROPERTY(bool, inhibitWhenAudio, true)
-    CONFIG_PROPERTY(bool, inhibitWhenCharging, false)
-    CONFIG_LIST(GeneralIdleTimeoutList, timeouts,
-        DEFAULT_ARG({
-            vmap({
-                { u"timeout"_s, 180 },
-                { u"idleAction"_s, u"lock"_s },
-            }),
-            vmap({
-                { u"timeout"_s, 300 },
-                { u"idleAction"_s, u"dpms off"_s },
-                { u"returnAction"_s, u"dpms on"_s },
-            }),
-            vmap({
-                { u"timeout"_s, 600 },
-                { u"idleAction"_s, QStringList{ u"suspendThenHibernate"_s } },
-            }),
-        }))
+    CONFIG_SUBOBJECT(GeneralIdleLock, lock)
+    CONFIG_SUBOBJECT(GeneralIdleDisplay, display)
+    CONFIG_SUBOBJECT(GeneralIdleSleep, sleep)
 };
 
 class GeneralBatteryWarnLevel : public settings::ObjectNode {

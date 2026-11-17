@@ -14,33 +14,34 @@ Scope {
 
     required property Lock lock
     readonly property bool hasPlayer: Players.list.some(p => p.isPlaying)
-    readonly property bool isCharging: !UPower.onBattery
-    readonly property bool enabled: {
-        if (GlobalConfig.general.idle.inhibitWhenAudio && hasPlayer)
-            return false;
-        if (GlobalConfig.general.idle.inhibitWhenCharging && isCharging)
-            return false;
-        return true;
+    // Desktops have no battery, so there is no "charging" state: they always use the regular timeouts
+    readonly property bool isCharging: UPower.displayDevice.isLaptopBattery && !UPower.onBattery
+    readonly property bool enabled: !(GlobalConfig.general.idle.inhibitWhenAudio && hasPlayer)
+
+    function setDpms(on: bool): void {
+        if (Hypr.usingLua)
+            Hypr.dispatch(`hl.dsp.dpms({ action = "${on ? "enable" : "disable"}" })`);
+        else
+            Hypr.dispatch(on ? "dpms on" : "dpms off");
     }
 
-    function handleIdleAction(action: var): void {
-        if (!action)
-            return;
-
-        if (action === "lock")
-            lock.lock.locked = true;
-        else if (action === "unlock")
-            lock.lock.locked = false;
-        else if (typeof action === "string")
-            Hypr.dispatch(Hypr.usingLua && ["dpms off", "dpms on"].includes(action) ? `hl.dsp.dpms({ action = "${action === "dpms off" ? "disable" : "enable"}" })` : action);
-        else if (!SessionManager.exec(action))
-            Quickshell.execDetached(action);
+    // Timeout in seconds for the current power state, 0 when disabled
+    function timeoutFor(node: var): int {
+        const t = isCharging ? node.timeoutCharging : node.timeout;
+        return t > 0 ? t : 0;
     }
 
     Connections {
         function onAboutToSleep(): void {
             if (GlobalConfig.general.idle.lockBeforeSleep)
                 root.lock.lock.locked = true;
+        }
+
+        function onResumed(): void {
+            // The idle monitor doesn't reliably report activity across a suspend, so the
+            // return action can be missed and the outputs stay off. Always turn them back on.
+            root.setDpms(true);
+            dpmsRetry.restart();
         }
 
         function onLockRequested(): void {
@@ -54,24 +55,46 @@ Scope {
         target: SessionManager
     }
 
-    Variants {
-        model: GlobalConfig.general.idle.timeouts.values
+    // Outputs can still be coming back up right after resume, so try once more
+    Timer {
+        id: dpmsRetry
 
-        IdleMonitor {
-            required property var modelData
+        interval: 1000
+        onTriggered: root.setDpms(true)
+    }
 
-            enabled: {
-                if (!root.enabled || !(modelData.enabled ?? true))
-                    return false;
-                if (modelData.inhibitWhenAudio && root.hasPlayer)
-                    return false;
-                if (modelData.inhibitWhenCharging && root.isCharging)
-                    return false;
-                return true;
-            }
-            timeout: modelData.timeout
-            respectInhibitors: modelData.respectInhibitors ?? true
-            onIsIdleChanged: root.handleIdleAction(isIdle ? modelData.idleAction : modelData.returnAction)
+    // Always respects wayland idle inhibitors (wake locks, fullscreen video, etc.)
+    component Monitor: IdleMonitor {
+        required property int seconds
+
+        enabled: root.enabled && seconds > 0
+        timeout: Math.max(1, seconds)
+        respectInhibitors: true
+    }
+
+    Monitor {
+        seconds: root.timeoutFor(GlobalConfig.general.idle.lock)
+        onIsIdleChanged: {
+            if (isIdle)
+                root.lock.lock.locked = true;
+        }
+    }
+
+    Monitor {
+        seconds: root.timeoutFor(GlobalConfig.general.idle.display)
+        onIsIdleChanged: root.setDpms(!isIdle)
+        onEnabledChanged: {
+            // Don't leave the screens off if the timeout gets disabled or inhibited while idle
+            if (!enabled)
+                root.setDpms(true);
+        }
+    }
+
+    Monitor {
+        seconds: root.timeoutFor(GlobalConfig.general.idle.sleep)
+        onIsIdleChanged: {
+            if (isIdle)
+                SessionManager.suspendThenHibernate();
         }
     }
 }

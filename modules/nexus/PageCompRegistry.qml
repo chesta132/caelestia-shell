@@ -103,6 +103,14 @@ QtObject {
 
         // System
         Component {
+            // Power
+            StackPage {
+                Component {
+                    PowerPage {}
+                }
+            }
+        },
+        Component {
             PlaceholderComp {}
         },
         Component {

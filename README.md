@@ -444,25 +444,18 @@ For example, to automatically hide the bar on the monitor named `DP-1`:
         "idle": {
             "lockBeforeSleep": true,
             "inhibitWhenAudio": true,
-            "inhibitWhenCharging": false,
-            "timeouts": [
-                {
-                    "timeout": 180,
-                    "idleAction": "lock",
-                    "inhibitWhenAudio": false,
-                    "inhibitWhenCharging": false,
-                    "respectInhibitors": true
-                },
-                {
-                    "timeout": 300,
-                    "idleAction": "dpms off",
-                    "returnAction": "dpms on"
-                },
-                {
-                    "timeout": 600,
-                    "idleAction": ["suspendThenHibernate"]
-                }
-            ]
+            "lock": {
+                "timeout": 180,
+                "timeoutCharging": 180
+            },
+            "display": {
+                "timeout": 300,
+                "timeoutCharging": 0
+            },
+            "sleep": {
+                "timeout": 600,
+                "timeoutCharging": 0
+            }
         },
         "battery": {
             "warnLevels": [
