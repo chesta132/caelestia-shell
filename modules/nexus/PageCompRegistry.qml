@@ -92,14 +92,6 @@ QtObject {
                 }
             }
         },
-        Component {
-            // Display
-            StackPage {
-                Component {
-                    DisplayPage {}
-                }
-            }
-        },
 
         // System
         Component {
