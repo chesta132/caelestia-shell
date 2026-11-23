@@ -131,13 +131,12 @@ Item {
         Visual {
             id: live
 
-            // Oversized by 2 * amount so the pan never reveals an edge.
-            // Higher workspaces move the viewport right/down, so the image itself drifts left/up.
-            width: parent.width
-            height: parent.height
-            x: root.parallaxActive && root.parallaxHorizontal ? (0.5 - root.parallaxProgress) * 2 * root.parallax.amount * width : 0
-            y: root.parallaxActive && !root.parallaxHorizontal ? (0.5 - root.parallaxProgress) * 2 * root.parallax.amount * height : 0
-            scale: root.parallaxActive ? 1 + 2 * root.parallax.amount : 1
+            readonly property real over: root.parallaxActive ? 1 + 2 * root.parallax.amount : 1
+
+            width: parent.width * over
+            height: parent.height * over
+            x: -(width - parent.width) / 2 + (root.parallaxActive && root.parallaxHorizontal ? (0.5 - root.parallaxProgress) * 2 * root.parallax.amount * parent.width : 0)
+            y: -(height - parent.height) / 2 + (root.parallaxActive && !root.parallaxHorizontal ? (0.5 - root.parallaxProgress) * 2 * root.parallax.amount * parent.height : 0)
 
             // Deliberately slower than the workspace switch and without overshoot
             Behavior on x {
