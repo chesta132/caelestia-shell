@@ -433,7 +433,7 @@ For example, to automatically hide the bar on the monitor named `DP-1`:
     "general": {
         "logo": "",
         "showOverFullscreen": false,
-        "mediaGifSpeedAdjustment": 300,
+        "mediaGifSpeedAdjustment": 150,
         "sessionGifSpeed": 0.7,
         "apps": {
             "terminal": ["foot"],
