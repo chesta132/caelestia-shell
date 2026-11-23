@@ -51,7 +51,26 @@ Item {
         currentCapture.scheduleUpdate();
     }
 
-    Component.onCompleted: live.source = source
+    Component.onCompleted: {
+        live.source = source;
+        if (introEnabled && live.ready)
+            introAnim.start();
+    }
+
+    // Intro: the wallpaper opens from the top, smaller and transparent
+    property bool introEnabled: true
+    property real introProgress: introEnabled ? 0 : 1
+
+    NumberAnimation {
+        id: introAnim
+
+        target: root
+        property: "introProgress"
+        from: 0
+        to: 1
+        duration: 700
+        easing.type: Easing.OutCubic
+    }
 
     NumberAnimation on transitionProgress {
         id: transitionAnim
@@ -102,6 +121,13 @@ Item {
         anchors.fill: parent
         clip: true
 
+        // Intro starts transparent above the screen, then settles
+        opacity: root.introProgress
+
+        transform: Translate {
+            y: -0.35 * view.height * (1 - root.introProgress)
+        }
+
         Visual {
             id: live
 
@@ -133,8 +159,11 @@ Item {
             layer.enabled: true
 
             onReadyChanged: {
-                if (ready && source === root.source)
+                if (ready && source === root.source) {
                     transitionAnim.start();
+                    if (root.introEnabled && root.introProgress === 0)
+                        introAnim.start();
+                }
             }
         }
     }
