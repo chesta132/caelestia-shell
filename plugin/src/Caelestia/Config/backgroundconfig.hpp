@@ -47,12 +47,21 @@ class BackgroundVisualiser : public settings::ObjectNode {
     CONFIG_PROPERTY(qreal, spacing, 1)
 };
 
+class BackgroundParallax : public settings::ObjectNode {
+    CONFIG_NODE(BackgroundParallax, settings::ObjectNode)
+
+    CONFIG_PROPERTY(bool, enabled, false)
+    CONFIG_ENUM_PROPERTY(ParallaxAxis, axis, ParallaxAxis::Horizontal)
+    CONFIG_PROPERTY(qreal, amount, 0.1)
+};
+
 class BackgroundConfig : public settings::ObjectNode {
     CONFIG_NODE(BackgroundConfig, settings::ObjectNode)
 
     CONFIG_PROPERTY(bool, enabled, true)
     CONFIG_PROPERTY(bool, wallpaperEnabled, true)
     CONFIG_ENUM_PROPERTY(WallpaperTransition, wallpaperTransition, WallpaperTransition::Crossfade)
+    CONFIG_SUBOBJECT(BackgroundParallax, parallax)
     CONFIG_SUBOBJECT(DesktopClock, desktopClock)
     CONFIG_SUBOBJECT(BackgroundVisualiser, visualiser)
 };

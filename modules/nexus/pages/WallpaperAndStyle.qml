@@ -9,12 +9,27 @@ import qs.components
 import qs.components.controls
 import qs.components.widgets
 import qs.services
+import qs.utils
 import qs.modules.nexus.common
 
 PageBase {
     id: root
 
     title: Tr.tr("Wallpaper & style")
+
+    // Parallax shifts the wallpaper by up to this fraction of its size at each end
+    readonly property real maxParallax: 0.25
+
+    readonly property list<MenuItem> parallaxAxisItems: [
+        MenuItem {
+            text: Tr.tr("Horizontal")
+            value: ParallaxAxis.Horizontal
+        },
+        MenuItem {
+            text: Tr.tr("Vertical")
+            value: ParallaxAxis.Vertical
+        }
+    ]
 
     ColumnLayout {
         anchors.horizontalCenter: parent.horizontalCenter
@@ -116,6 +131,32 @@ PageBase {
             text: Tr.tr("Display wallpaper")
             checked: Config.background.wallpaperEnabled
             onToggled: GlobalConfig.background.wallpaperEnabled = checked
+        }
+
+        ToggleRow {
+            Layout.topMargin: Tokens.spacing.extraSmall / 2 - parent.spacing
+
+            text: Tr.tr("Parallax")
+            subtext: Tr.tr("Shift the wallpaper as you move between workspaces")
+            checked: Config.background.parallax.enabled
+            onToggled: GlobalConfig.background.parallax.enabled = checked
+        }
+
+        SelectRow {
+            label: Tr.tr("Parallax direction")
+            menuItems: root.parallaxAxisItems
+            active: root.parallaxAxisItems.find(i => i.value === Config.background.parallax.axis)
+            enabled: Config.background.parallax.enabled
+            onSelected: item => GlobalConfig.background.parallax.axis = item.value
+        }
+
+        SliderRow {
+            icon: "percent"
+            label: Tr.tr("Parallax amount")
+            valueLabel: Strings.percentOne(Config.background.parallax.amount)
+            value: Config.background.parallax.amount / root.maxParallax
+            enabled: Config.background.parallax.enabled
+            onMoved: v => GlobalConfig.background.parallax.amount = v * root.maxParallax
         }
 
         ToggleRow {

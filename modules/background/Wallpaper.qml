@@ -13,6 +13,7 @@ Item {
     id: root
 
     property bool completed
+    property var screen
 
     Component.onCompleted: completed = true
 
@@ -85,6 +86,7 @@ Item {
     WallpaperImpl {
         id: impl
 
+        screen: root.screen
         anchors.fill: parent
     }
 }
